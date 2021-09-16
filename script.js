@@ -320,35 +320,56 @@ function toastifier(msg, options = {}) {
     }
     const animation_time = (options.duration / 2 - 500) / 1000 || 1;
     h.style.animation = `animated_entrance ${animation_time}s`;
-    const time1 = setTimeout(() => {
+    const leave1 = () => {
       h.style.animation = `animated_exit ${animation_time}s`;
-    }, options.duration || 3000);
-    const time2 = setTimeout(() => {
+    };
+    const leave2 = () => {
       h.remove();
       if (document.getElementsByClassName("toastifier__alert").length === 0) {
         container.remove();
       }
-    }, options.duration + 1000 * animation_time || 4000);
-    if (options.onhoverPause) {
-      h.addEventListener("mouseover", () => {
-        clearTimeout(time1);
-        clearTimeout(time2);
-      });
+    };
+
+    let end;
+
+    if (options.manual) {
+      end = () => {
+        setTimeout(leave1, options.duration || 3000);
+        setTimeout(leave2, options.duration + 1000 * animation_time || 4000);
+      };
+    } else {
+      const time1 = setTimeout(leave1, options.duration || 3000);
+      const time2 = setTimeout(
+        leave2,
+        options.duration + 1000 * animation_time || 4000
+      );
       if (options.onhoverPause) {
-        h.addEventListener("mouseleave", () => {
-          setTimeout(() => {
-            h.style.animation = `animated_exit ${animation_time}s`;
-          }, 500);
-          setTimeout(() => {
-            h.remove();
-            if (document.getElementsByClassName("toastifier__alert").length === 0) {
-              container.remove();
-            }
-          }, 1500);
+        h.addEventListener("mouseover", () => {
+          clearTimeout(time1);
+          clearTimeout(time2);
         });
+        if (options.onhoverPause) {
+          h.addEventListener("mouseleave", () => {
+            setTimeout(() => {
+              h.style.animation = `animated_exit ${animation_time}s`;
+            }, 500);
+            setTimeout(() => {
+              h.remove();
+              if (
+                document.getElementsByClassName("toastifier__alert").length ===
+                0
+              ) {
+                container.remove();
+              }
+            }, 1500);
+          });
+        }
       }
     }
+
     container.appendChild(h);
+    return end;
   }
 }
+
 module.exports = toastifier;
